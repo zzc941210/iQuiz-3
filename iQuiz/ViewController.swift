@@ -19,7 +19,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     var questions = ["Q1", "Q2"]
     var answers = [["A11", "A12", "A13", "A14"], ["A21", "A22", "A23", "A24"]]
     var correctAnswers = [2, 3]
-    var questionURL = "file:///Users/zichuzheng/Desktop/questions.json"
+    var defaultUrl = "http://tednewardsandbox.site44.com/questions.json"
     
     
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -28,7 +28,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     public func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! ViewControllerTableViewCell
-        
         cell.myImage.image = UIImage(named: ("\(indexPath.row % 3 + 1).jpg"))
         cell.myLabel.text = (dataArray[indexPath.row] as! [String : Any])["title"] as? String
         cell.descriptionLabel.text = (dataArray[indexPath.row] as! [String : Any])["desc"] as? String
@@ -58,18 +57,34 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        checkURL(questionURL)
+        
+        var mySettingValue = UserDefaults.standard.string(forKey: "myUrl")
+        if mySettingValue == nil {
+            var appDefaults : [String : String] = [:]
+            appDefaults["myUrl"] = defaultUrl
+            UserDefaults.standard.register(defaults: appDefaults)
+            UserDefaults.standard.synchronize()
+            mySettingValue = UserDefaults.standard.string(forKey: "myUrl")
+        }
+        checkURL(mySettingValue!)
     }
     
     func checkURL(_ myURL : String) {
         var request = URLRequest(url: URL(string: myURL)!)
         request.httpMethod = "GET"
         let session = URLSession.shared
-        session.dataTask(with: request) {data, response, err in
+        session.dataTask(with: request) { data, response, err in
             // TODO: if 200 then do. Otherwise use local instead. Alert.
-            self.dataArray = try! JSONSerialization.jsonObject(with: data!, options: []) as! NSArray
+            let responseParse = response as! HTTPURLResponse
+            if (responseParse.statusCode == 200) {
+                self.dataArray = try! JSONSerialization.jsonObject(with: data!, options: []) as! NSArray
+            } else {
+                if let asset = NSDataAsset(name: "questions") {
+                    let data = asset.data
+                    self.dataArray = try! JSONSerialization.jsonObject(with: data, options: []) as! NSArray
+                }
+            }
         }.resume()
-
     }
 
     override func didReceiveMemoryWarning() {
@@ -88,9 +103,6 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             nextVC?.answers = answers
             nextVC?.correctAnswers = correctAnswers
             nextVC?.userScore = 0
-        } else if (segue.identifier == "showSetting") {
-            let nextVC = segue.destination as? SettingViewController
-            nextVC?.questionURL = questionURL
         }
     }
     

@@ -16,7 +16,8 @@ class SettingViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        urlTextField.text = questionURL
+        UserDefaults.standard.synchronize()
+        urlTextField.text = UserDefaults.standard.string(forKey: "myUrl")
 
     }
 
@@ -26,19 +27,9 @@ class SettingViewController: UIViewController {
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        let nextVC = segue.destination as? ViewController
-        nextVC?.questionURL = urlTextField.text!
+        var appDefaults : [String : String] = [:]
+        appDefaults["myUrl"] = urlTextField.text!
+        UserDefaults.standard.register(defaults: appDefaults)
+        UserDefaults.standard.synchronize()
     }
-    
-
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
 }

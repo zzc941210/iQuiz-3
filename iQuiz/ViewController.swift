@@ -20,6 +20,9 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     var answers = [["A11", "A12", "A13", "A14"], ["A21", "A22", "A23", "A24"]]
     var correctAnswers = [2, 3]
     var defaultUrl = "http://tednewardsandbox.site44.com/questions.json"
+    var refresher: UIRefreshControl!
+    
+    @IBOutlet weak var tableview: UITableView!
     
     
     public func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -58,6 +61,14 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
+        refresher = UIRefreshControl()
+        refresher.attributedTitle = NSAttributedString(string: "Pull to refresh")
+        refresher.addTarget(self, action: #selector(ViewController.updateURL), for: UIControlEvents.valueChanged)
+        tableview.addSubview(refresher)
+        updateURL()
+    }
+    
+    @objc func updateURL() {
         var mySettingValue = UserDefaults.standard.string(forKey: "myUrl")
         if mySettingValue == nil {
             var appDefaults : [String : String] = [:]
@@ -67,6 +78,8 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             mySettingValue = UserDefaults.standard.string(forKey: "myUrl")
         }
         checkURL(mySettingValue!)
+        tableview.reloadData()
+        refresher.endRefreshing()
     }
     
     func checkURL(_ myURL : String) {
